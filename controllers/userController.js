@@ -1,6 +1,8 @@
 import userModel from "../models/userModel.js";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import razorpay from "razorpay";
+import transactionModel from "../models/transationModel.js";
 
 
 const registerUser = async(req,res)=>{
@@ -8,7 +10,7 @@ const registerUser = async(req,res)=>{
         const{name,email,password}=req.body;
 
         if(!name || !email || !password){
-            return res.json({sucess:false,message:'Missing Deteils'})
+            return res.json({success:false,message:'Missing Deteils'})
         }
 
         const salt = await bcrypt.genSalt(10)
@@ -25,11 +27,11 @@ const registerUser = async(req,res)=>{
 
         const token = jwt.sign({id:user._id},process.env.JWT_SECRET)
 
-        res.json({sucess:true,token,user:{name:user.name}})
+        res.json({success:true,token,user:{name:user.name}})
 
     } catch (error){
         console.log(error)
-        res.json({sucess:false,message:error.message})
+        res.json({success:false,message:error.message})
     }
 }
 
@@ -41,7 +43,7 @@ const loginUser=async(req,res)=>{
         const user =await userModel.findOne({email})
 
         if(!user){
-            return res.json({sucess:false,message:'User does not exist'})
+            return res.json({success:false,message:'User does not exist'})
         }
          
         const isMatch=await bcrypt.compare(password,user.password)
@@ -49,14 +51,14 @@ const loginUser=async(req,res)=>{
         if(isMatch){
           const token =jwt.sign ({id: user._id},process.env.JWT_SECRET)
 
-          res.json({sucess:true,token,user:{name:user.name}})
+          res.json({success:true,token,user:{name:user.name}})
         }else{
-            return res.json({sucess:false, message:'Invalid credentials'})
+            return res.json({success:false, message:'Invalid credentials'})
         }
 
     } catch (error) {
         console.log(error)
-        res.json({sucess:false,message:error.message})
+        res.json({success:false,message:error.message})
     }
 }
 
@@ -66,11 +68,67 @@ const userCredits=async(req,res)=>{
         const{userId}=req.body
 
         const user = await userModel.findById(userId)
-        res.json({sucess:true,credits:user.creditBalance,user:{name:user.name}})
+        res.json({success:true,credits:user.creditBalance,user:{name:user.name}})
     } catch (error) {
         console.log(error.message);
-        res.json({sucess:false,message:error.message})
+        res.json({success:false,message:error.message})
     }
 }
+
+const razorpayInstance= new razorpay({
+    key_id:process.env.RAZORPAY_KEY_ID,
+    key_secret:process.env.RAZORPAY_KEY_SECRET
+})
+
+const paymentRazorpay=async(req,res)=>{
+    try {
+        const {userId,palnId} =req.body
+
+        const userData=await userModel.findById(userId)
+
+        if(!userId || !palnId){
+            return res.json({success:false,message:'missing Details'})
+        }
+
+        let credits,plan,amount,date 
+
+        switch (palnId) {
+            case 'Basic':
+                plan = 'Basic'
+                credits = 50
+                amount = 10
+                break;
+
+                case 'Advance':
+                plan = 'Advance'
+                credits = 500
+                amount = 50
+                break;
+
+                case 'Business':
+                plan = 'Business'
+                credits = 5000
+                amount = 250
+                break;
+        
+            default:
+                return res.json({sucess:false,message:'plan not found'});
+        }
+
+        date = Date.now();
+
+        const transactionData = {userId,plan,amount,credits,date}
+
+
+
+
+
+    } catch (error) {
+        console.log(error)
+        res.json({success:false,message:error.message})
+        
+    }
+}
+
 
 export {registerUser,loginUser,userCredits}
