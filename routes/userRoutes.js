@@ -11,6 +11,3 @@ userRouter.get('/credits',userAuth,userCredits)
 userRouter.post('/pay-razor',userAuth,paymentRazorpay)
 
 export default userRouter;
-
-// http://localhost:4000/api/user/register
-// http://localhost:4000/api/user/login

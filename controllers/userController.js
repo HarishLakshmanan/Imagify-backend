@@ -86,7 +86,7 @@ const paymentRazorpay=async(req,res)=>{
 
         const userData=await userModel.findById(userId)
 
-        if(!userId || !palnId){
+        if(!userData || !palnId){
             return res.json({success:false,message:'missing Details'})
         }
 
