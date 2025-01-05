@@ -26,7 +26,7 @@ const registerUser = async(req,res)=>{
             return res.json({success:false,message:'Password is not strong'})
         }
 
-        const salt = await bcrypt.process.env.HASH
+        const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password,salt)
 
         const userData={
